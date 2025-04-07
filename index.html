@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TildeBench - Large Language Model Leaderboard</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .benchmark-item {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+    }
+    .benchmark-item img {
+      max-width: 100px;
+      margin-right: 1rem;
+    }
+    /* Optional: adjust the logo size within the header */
+    .header-logo {
+      height: 50px;
+      vertical-align: middle;
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-5">
+    <h1 class="mb-4 text-center">
+      <img src="tilde-bench.png" alt="Tilde Bench Logo" class="header-logo">
+      TildeBench - Large Language Model (LLM) Leaderboard
+      <a href="https://www.tilde.ai" target="_blank"><img src="tilde-logo.png" alt="Tilde Logo" class="header-logo"></a>
+    </h1>
+    <div class="list-group">
+      <a href="zero-shot-mcqa-bench.html" class="list-group-item list-group-item-action benchmark-item">
+        <img src="zero-shot-mcqa-bench.png" alt="Zero-shot Multi-Choice QA Benchmark" class="img-fluid">
+        <div>
+          <h5 class="mb-1">Zero-shot In-Context Multi-Choice Question-Answering Benchmark</h5>
+          <p class="mb-1">Tests the performance of LLMs in zero-shot multi-choice question-answering and analyses how well they output results in the required format.</p>
+          <p class="mb-1"><strong>Languages covered:</strong> Czech, English, Estonian, Finnish, French, German, Latvian, Lithuanian, Polish, Russian, Ukrainian</p>
+        </div>
+      </a>
+      <a href="one-shot-empty-bench.html" class="list-group-item list-group-item-action benchmark-item">
+        <img src="one-shot-mt-bench.png" alt="One-shot Machine Translation Benchmark" class="img-fluid">
+        <div>
+          <h5 class="mb-1">One-shot Machine Translation Benchmark</h5>
+          <p class="mb-1">Tests the performance of LLMs in one-shot translation capabilities.</p>
+          <p class="mb-1"><strong>Languages covered:</strong> English, Estonian, French, German, Latvian, Lithuanian, Polish, Russian</p>
+        </div>
+      </a>
+      <a href="tokenizer-bench.html" class="list-group-item list-group-item-action benchmark-item">
+        <img src="tokenizer-bench.png" alt="LLM Tokenizer Benchmark" class="img-fluid">
+        <div>
+          <h5 class="mb-1">Large Language Model Tokenizer Benchmark</h5>
+          <p class="mb-1">Compares LLM tokenizers (total number of tokens generated, token-per-word ratio, vocabulary size).</p>
+          <p class="mb-1"><strong>Languages covered:</strong> Bulgarian, Croatian, Czech, Danish, Dutch, English, Estonian, Finnish, French, German, Hungarian, Icelandic, Italian, Latvian, Lithuanian, Maltese, Norwegian, Polish, Portuguese, Romanian, Russian, Slovak, Slovenian, Spanish, Swedish, Ukrainian</p>
+        </div>
+      </a>
+      <a href="text-generation-error-analysis-euro-models.html" class="list-group-item list-group-item-action benchmark-item">
+        <img src="error-analysis.png" alt="LLM Error Analysis" class="img-fluid">
+        <div>
+          <h5 class="mb-1">LLM Error Analysis for Languages of the Baltic States</h5>
+          <p class="mb-1">Manual error analysis for Latvian, Lithuanian, and Estonian. Focus on European LLMs.</p>
+          <p class="mb-1"><strong>Languages covered:</strong> Estonian, Latvian, Lithuanian</p>
+        </div>
+      </a>
+    </div>
+    <div class="mt-4 text-center">
+      <p class="text-muted">More benchmarks coming soon...</p>
+    </div>
+  </div>
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
