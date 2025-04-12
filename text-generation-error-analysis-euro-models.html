@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLM Error Analysis for Languages of the Baltic States</title>
+  <!-- Load Plotly from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link rel="stylesheet" href="prism.css" data-noprefix />
+  
+  <script src="prism.js"></script>
+    <style>
+    body {
+      background-color: #f8f9fa;
+      margin-left: 80px; /* Prevent content from being hidden behind the sidebar */
+    }
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 80px;
+      height: 100vh;
+      background-color: #343a40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 1rem;
+    }
+    .sidebar a {
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .sidebar img {
+      max-width: 50px;
+      filter: brightness(0.5);
+    }
+    .sidebar a:hover img {
+      filter: brightness(0.8);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <a href="index.html" data-bs-toggle="tooltip" data-bs-placement="right" title="Home">
+      <img src="tilde-bench.png" alt="Zero-shot Icon" class="img-fluid">
+    </a>
+    <a href="zero-shot-mcqa-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="Zero-shot In-Context Multi-Choice Question-Answering Benchmark">
+      <img src="zero-shot-mcqa-bench.png" alt="Zero-shot Icon" class="img-fluid">
+    </a>
+    <a href="one-shot-empty-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="One-shot Sentence-Level Machine Translation Benchmark">
+      <img src="one-shot-mt-bench.png" alt="One-shot Icon" class="img-fluid">
+    </a>
+    <a href="tokenizer-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="LLM Tokenizer Benchmark">
+      <img src="tokenizer-bench.png" alt="Tokenizer Icon" class="img-fluid">
+    </a>
+    <a href="text-generation-error-analysis-euro-models.html" data-bs-toggle="tooltip" data-bs-placement="right" title="LLM Error Analysis for Languages of the Baltic States">
+      <img src="error-analysis.png" alt="Error Analysis Icon" class="img-fluid">
+    </a>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container py-5">
+  <h1>Large Language Model (LLM) Error Analysis for Languages of the Baltic States</h1>
+  <img src="error-analysis.png" width="100" />
+  <div>We asked LLMs to generate responses to 10 separate questions. These questions were chosen such that LLMs would require to generate more or less a page of text (some did generate more, some less). Then, we asked professional linguists to mark errors in the text.</div>
+  <div>We wanted to understand how good do the European LLMs (Mistral, EuroLLM, Teuken) compare with a state-of-the-art open-weights model (Gemma3) in terms of linguistic text quality and reliability of the generated text.</div>
+  <h2>Instructions given to annotators</h2>
+  <div>The following instructions were given to annotators:</div>
+  <div>
+  <pre style="width:1200px; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;"><code class="language-txt" style="width:800px; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;">Your task: We need you to use the online tool to mark two categories of errors: moderate and severe.
+
+Severe errors: punctuation errors, grammar errors, lexical choice errors  (inappropriate choice of words or made-up words, non-existing word forms), or anything else that you deem a gross linguistic mistake.
+Moderate errors: capitalization errors, style errors, phrasing borrowed from English, or anything else that you deem a moderate linguistic mistake.
+
+Additionally, we would like you to provide a short comment on the overall quality of each text: is the question answered as an educated human would, or does it contain made-up things?</code></pre>
+</div>
+  <h2>Questions for which we generated answers</h2>
+  <div>All questions require creative writing from the LLM. Most questions (8 out of 10) ar deliberately specific to regional contexts (e.g., local food, local politics, famous local people, etc.).</div>
+  <pre style="width:1200px; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;"><code class="language-python" style="width:800px; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;">lv = ["Sagatavo maizes zupas recepti, kas uzskaita visas sastāvdaļas un darbības.",
+"Sagatavo iesniegumu par bērna pabalsta piešķiršanu Rīgas pašvaldībai.",
+"Uzraksti eseju par to, kāpēc jābūt labam cilvēkam.",
+"Uzraksti argumentētu diskusiju, kas paskaidro, vai Baltijas valstis anektēja vai okupēja Padomju savienība.",
+"Sagatavo Raiņa autobiogrāfiju (ieskaitot visus viņa darbus).",
+"Sagatavo bloga rakstu par politiskām norisēm Rīgā 2020. gadā.",
+"Precīzi (detaļās) apraksti Latvijas nacionālo tautas tērpu.",
+"Sagatavo pārspriedumu par aktuāliem notikumiem Latvijā 2022. gadā.",
+"Kas ir 10 populārākie latvieši, un ar ko viņi ir slaveni?",
+"Kas ir populārākais Latvijas eposs? Uzraksti izvērstu sižeta aprakstu."]</code></pre>
+<pre style="width:1200px; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;"><code class="language-python" style="width:800px; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;">lt = ["Parašykite cepelinų receptą, aiškiai nurodydami visus reikalingus ingredientus ir gaminimo etapus.",
+"Parenkite prašymą dėl vaiko išmokos skyrimo Vilniaus miesto savivaldybei.",
+"Parašykite esė, kurioje paaiškintumėte, kodėl svarbu būti geru žmogumi.",
+"Parenkite argumentuotą diskusiją, nagrinėjančią, ar Baltijos šalys buvo aneksuotos, ar okupuotos Sovietų Sąjungos.",
+"Parenkite Juozo Grušo autobiografiją, apimančią visą jo kūrybinį palikimą.",
+"Paruoškite tinklaraščio straipsnį apie politinius įvykius Vilniuje 2020 metais.",
+"Išsamiai aprašykite lietuvių tautinį kostiumą, jo istoriją, detales ir regioninius skirtumus.",
+"Parašykite diskusiją apie 2022 metų aktualias temas Lietuvoje.",
+"Išvardinkite dešimt populiariausių lietuvių ir parašyk kuo jie garsūs.",
+"Koks yra populiariausias lietuviškas epas? Pateikite išsamų jo siužeto aprašymą."]</code></pre>
+<pre style="width:1200px; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;"><code class="language-python" style="width:800px; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;">et = ["Koosta mulgipudru retsept, mis sisaldab kõiki koostisosi ja valmistamisjuhiseid.",
+"Koosta Tallinna linnale lapsetoetuse taotlus.",
+"Kirjuta essee teemal, miks peaks olema hea inimene.",
+"Kirjuta argumenteeritud arutelu, mis annaks selgituse selle kohta, kas Nõukogude Liit annekteeris või okupeeris Balti riigid.",
+"Koosta Eno Raua autobiograafia (mis sisaldab kõiki tema teoseid).",
+"Koosta blogipostitus poliitilistest arengutest Tallinnas aastal 2020.",
+"Kirjelda üksikasjalikult Eesti rahvariideid.",
+"Koosta väitlus Eesti 2022. aasta aktuaalsetel teemadel.",
+"Kes on 10 kõige populaarsemat eestlast ja mille poolest on nad kuulsad?",
+"Mis on Eesti populaarseim eepos? Kirjelda üksikasjalikult selle süžeed."]</code></pre>
+<div>These are the Estonian questions translated into English:</div>
+<ul>
+<li>Prepare the recipe of mulgipuder that lists all the ingredients and steps.</li>
+<li>Prepare an application for child benefits to the Tallinn Municipality.</li>
+<li>Write an essay about why you should be a good person.</li>
+<li>Write an argumentative discussion that explains whether the Baltic States were annexed or occupied by the Soviet Union.</li>
+<li>Prepare an autobiography of Eno Raud (including all his works).</li>
+<li>Prepare a blog post about political developments in Tallinn in 2020.</li>
+<li>Describe the Estonian national costume in detail.</li>
+<li>Prepare a debate about current events in Estonia in 2022.</li>
+<li>Who are the 10 most popular Estonians, and what are they famous for?</li>
+<li>What is the most popular Estonian epic? Write a detailed description of the plot.</li>
+</ul>
+<h2>Text generation setup</h2>
+<div>To generate text with gemma3:27b and mistral-large, we used ollama and queried it using the default chat method's parameters. To generate text with eurollm:9b and teuken:7b, we used the Hugging Face transformers python library. However, different from the first two models, we had to specify that beam search (of 3) must be used for both eurollm:9b and teuken:7b. If we used default parameters or if we set just temperature to 0, the models would excessively hallucinate (half of the texts were completely useless).</div>
+  <!-- LV Errors Chart -->
+  <h2>Error analysis results for Latvian</h2>
+  <div class="chart-container">
+    <div id="chartErrorsLV" style="width: 800px; height: 400px;"></div>
+  </div>
+  
+  <!-- LT Errors Chart -->
+  <h2>Error analysis results for Lithuanian</h2>
+  <div class="chart-container">
+    <div id="chartErrorsLT" style="width: 800px; height: 400px;"></div>
+  </div>
+  
+  <!-- ET Errors Chart -->
+  <h2>Error analysis results for Estonian</h2>
+  <div class="chart-container">
+    <div id="chartErrorsET" style="width: 800px; height: 400px;"></div>
+  </div>
+  
+  <h2>Hallucinations in LLM output</h2>
+  <div>Eurollm:9b and teuken:7b for some documents generated incoherent, insanely repetitive, completely unusable text (and this is even after we switched decoding to beam search). The following chart summarises how many responses (out of the 10 generated responses for each language) were a complete failure (and discarded for further analysis). From a production-worthy LLM for this type of a task (simple text generation), we would expect to see zero hallucinations.</div>
+  <!-- Hallucinations Chart -->
+  <div class="chart-container">
+    <div id="chartHallucinations" style="width: 800px; height: 400px;"></div>
+  </div>
+  
+  <h2>Overall count of tokens analyzed</h2>
+  <div>The following chart summarises the number of tokens per model and language annotated by annotators (this excludes the documents that were identified as hallucinations as it would have been a waste of time to annotate those).</div>
+  <!-- Token Count Chart -->
+  <div class="chart-container">
+    <div id="chartTokenCount" style="width: 800px; height: 400px;"></div>
+  </div>
+  
+  <!-- Factually correct Chart -->
+  <h2>How usable and factually correct are answers?</h2>
+  <div>We asked linguists to provide comments on how usable and factually correct the generated texts are. If the linguists indicated that a document contains false facts or is not usable, we marked that as an error.</div>
+  <div class="chart-container">
+    <div id="chartFactuallyCorrect" style="width: 800px; height: 400px;"></div>
+  </div>
+  </div>
+  <script>
+    // Define model labels
+    var models = ["gemma3:27b", "mistral-large", "teuken:7b (research)", "eurollm:9b"];
+    
+    // LV Errors Data (percentages)
+    var lvSevere = [1.91, 5.59, 2.92, 2.05];
+    var lvModerate = [0.99, 1.30, 0.92, 0.62];
+    
+    // LT Errors Data (percentages)
+    var ltSevere = [3.83, 7.27, 5.50, 4.52];
+    var ltModerate = [0.00, 0.02, 0.00, 0.00];
+    
+    // ET Errors Data (percentages)
+    var etSevere = [1.02, 2.05, 1.39, 0.25];
+    var etModerate = [0.43, 1.31, 0.72, 0.17];
+    
+    // Hallucinations Data (counts)
+    var hallLV = [0, 0, 4, 1];
+    var hallLT = [0, 0, 1, 0];
+    var hallET = [0, 0, 3, 2];
+    
+    // Total Count of Tokens Data
+    var tokensLV = [5343, 5062, 1848, 3414];
+    var tokensLT = [5667, 4471, 2999, 2545];
+    var tokensET = [5319, 3898, 1802, 2406];
+    
+    // LV Errors Stacked Bar Chart
+    var traceLVSevere = {
+      x: models,
+      y: lvSevere,
+      name: 'Severe',
+      type: 'bar',
+      marker: {
+        color: '#770000'
+      }
+    };
+    var traceLVModerate = {
+      x: models,
+      y: lvModerate,
+      name: 'Moderate',
+      type: 'bar',
+      marker: {
+        color: 'red'
+      }
+    };
+    var dataLV = [traceLVSevere, traceLVModerate];
+    var layoutLV = {
+      title: 'Latvian - errors (% of total token count)',
+      barmode: 'stack',
+      yaxis: {range: [0, 10]}
+    };
+    Plotly.newPlot('chartErrorsLV', dataLV, layoutLV);
+    
+    // LT Errors Stacked Bar Chart
+    var traceLTSevere = {
+      x: models,
+      y: ltSevere,
+      name: 'Severe',
+      type: 'bar',
+      marker: {
+        color: '#770000'
+      }
+    };
+    var traceLTModerate = {
+      x: models,
+      y: ltModerate,
+      name: 'Moderate',
+      type: 'bar',
+      marker: {
+        color: 'red'
+      }
+    };
+    var dataLT = [traceLTSevere, traceLTModerate];
+    var layoutLT = {
+      title: 'Lithuanian - errors (% of total token count)',
+      barmode: 'stack',
+      yaxis: {range: [0, 10]}
+    };
+    Plotly.newPlot('chartErrorsLT', dataLT, layoutLT);
+    
+    // ET Errors Stacked Bar Chart
+    var traceETSevere = {
+      x: models,
+      y: etSevere,
+      name: 'Severe',
+      type: 'bar',
+      marker: {
+        color: '#770000'
+      }
+    };
+    var traceETModerate = {
+      x: models,
+      y: etModerate,
+      name: 'Moderate',
+      type: 'bar',
+      marker: {
+        color: 'red'
+      }
+    };
+    var dataET = [traceETSevere, traceETModerate];
+    var layoutET = {
+      title: 'Estonian - errors (% of total token count)',
+      barmode: 'stack',
+      yaxis: {range: [0, 10]}
+    };
+    Plotly.newPlot('chartErrorsET', dataET, layoutET);
+    
+    // Hallucinations Grouped Bar Chart
+    var traceHallLV = {
+      x: models,
+      y: hallLV,
+      name: 'Latvian',
+      type: 'bar'
+    };
+    var traceHallLT = {
+      x: models,
+      y: hallLT,
+      name: 'Lithuanian',
+      type: 'bar'
+    };
+    var traceHallET = {
+      x: models,
+      y: hallET,
+      name: 'Estonian',
+      type: 'bar'
+    };
+    var dataHall = [traceHallLV, traceHallLT, traceHallET];
+    var layoutHall = {
+      title: 'Count of hallucinations (catastrophic fail in output)',
+      barmode: 'group',
+      yaxis: {range: [0, 10]}
+    };
+    Plotly.newPlot('chartHallucinations', dataHall, layoutHall);
+    
+    // Token Count Grouped Bar Chart
+    var traceTokensLV = {
+      x: models,
+      y: tokensLV,
+      name: 'Latvian',
+      type: 'bar'
+    };
+    var traceTokensLT = {
+      x: models,
+      y: tokensLT,
+      name: 'Lithuanian',
+      type: 'bar'
+    };
+    var traceTokensET = {
+      x: models,
+      y: tokensET,
+      name: 'Estonian',
+      type: 'bar'
+    };
+    var dataTokens = [traceTokensLV, traceTokensLT, traceTokensET];
+    var layoutTokens = {
+      title: 'Total count of tokens',
+      barmode: 'group'
+    };
+    Plotly.newPlot('chartTokenCount', dataTokens, layoutTokens);
+    
+    // Factually correct Stacked Bar Chart
+    var factEstonian = [5, 5, 3, 3];
+    var factLithuanian = [6, 8, 4, 5];
+    var factLatvian = [5, 4, 3, 5];
+    
+    var traceFactEstonian = {
+      x: models,
+      y: factEstonian,
+      name: 'Estonian',
+      type: 'bar'
+    };
+    var traceFactLithuanian = {
+      x: models,
+      y: factLithuanian,
+      name: 'Lithuanian',
+      type: 'bar'
+    };
+    var traceFactLatvian = {
+      x: models,
+      y: factLatvian,
+      name: 'Latvian',
+      type: 'bar'
+    };
+    
+    var dataFact = [traceFactEstonian, traceFactLithuanian, traceFactLatvian];
+    var layoutFact = {
+      title: 'Factually correct and usable responses',
+      barmode: 'stack',
+      yaxis: {range: [0, 30]}
+    };
+    
+    Plotly.newPlot('chartFactuallyCorrect', dataFact, layoutFact);
+  </script>
+</body>
+</html>

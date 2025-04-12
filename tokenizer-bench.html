@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tokenizer Bench</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Load the Plotly.js library from a CDN -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="prism.js"></script>
+    <style>
+        body {
+          background-color: #f8f9fa;
+          margin-left: 80px; /* Prevent content from being hidden behind the sidebar */
+        }
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          width: 80px;
+          height: 100vh;
+          background-color: #343a40;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding-top: 1rem;
+        }
+        .sidebar a {
+          margin-bottom: 1rem;
+          display: block;
+        }
+        .sidebar img {
+          max-width: 50px;
+          filter: brightness(0.5);
+        }
+        .sidebar a:hover img {
+          filter: brightness(0.8);
+        }
+      </style>
+  </head>
+  <body>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <a href="index.html" data-bs-toggle="tooltip" data-bs-placement="right" title="Home">
+      <img src="tilde-bench.png" alt="Zero-shot Icon" class="img-fluid">
+    </a>
+    <a href="zero-shot-mcqa-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="Zero-shot In-Context Multi-Choice Question-Answering Benchmark">
+      <img src="zero-shot-mcqa-bench.png" alt="Zero-shot Icon" class="img-fluid">
+    </a>
+    <a href="one-shot-empty-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="One-shot Sentence-Level Machine Translation Benchmark">
+      <img src="one-shot-mt-bench.png" alt="One-shot Icon" class="img-fluid">
+    </a>
+    <a href="tokenizer-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="LLM Tokenizer Benchmark">
+      <img src="tokenizer-bench.png" alt="Tokenizer Icon" class="img-fluid">
+    </a>
+    <a href="text-generation-error-analysis-euro-models.html" data-bs-toggle="tooltip" data-bs-placement="right" title="LLM Error Analysis for Languages of the Baltic States">
+      <img src="error-analysis.png" alt="Error Analysis Icon" class="img-fluid">
+    </a>
+  </nav>
+  <!-- Main Content -->
+  <div class="container py-5">
+    <h1>Tokenizer Bench</h1>
+    <img src="tokenizer-bench.png" width="100" />
+    <!-- This DIV will host our Plotly chart -->
+    <h2>Token count comparison</h2>
+    <div>We compare tokenizers on the <a href="https://github.com/facebookresearch/flores/blob/main/flores200/README.md" target="_blank">FLORES-200 dataset<a> (devtest subset). The dataset contains the same text translated in different languages. We analyse, in how many tokens each tokenizer splits the text in each language. Language equity is ensured if a tokenizer splits each text (for each language) in comparably equal numbers of tokens.</div>
+    <div>Note that the comparison does not take into account that tokenizers may have different vocabulary sizes, which impact the size of the neural network (it may be harder to train neural networks with larger vocabularies). Smaller numbers do not necessarily mean a good thing. However, comparable numbers for overall token count accross languages do mean that some languages are better or worse supported.</div>
+    <div id="chartDiv" style="width:900px; height:600px;"></div>
+    <h2>Token-per-word ratio comparison</h2>
+    <div>The token-per-word ratio metric shows the average number of tokens in which words are split for each language. Since languages are different, it would be stupid to aim to have this metric equal accross languages. For instance, Finnish and German use a lot of compounding. We do want that Finnish and German words are split into smaller parts. English has much less compounding and less inflections - we want English words to be split less. Nevertheless, it is important to see that there isn't excessive splitting happening (the average should be below 2).</div>
+    <div id="chartDiv2" style="width:900px; height:600px;"></div>
+    
+    <h2>Tokenizer vocabulary size comparison</h2>
+    <div>For Mistral, the scores are the ones published by Mistral. For other models, the score is the number returned by AutoTokenizer.vocab_size.</div>
+    <div id="chartDiv3" style="width:900px; height:600px;"></div>
+
+    <h2>Token count comparison for TildeLM focus languages</h2>
+    <div>TildeLM is focused on Baltic, Finnic, and Slavic languages where we aim to have language equity. This for the tokenizer means that it should split the same text (regardless of the language) in more or less equal numbers of tokens.</div>
+    <div id="chartDiv4" style="width:900px; height:600px;"></div>
+  </div>
+    <script>
+      // 1) Define the data arrays
+      const languages = [
+        "bg", "cs", "de", "et", "fi", "hr", "lt", "lv", "pl", "ro", "ru", "sk", "sl", "uk", "da", "en", "es", "fr", "hu", "is", "it", "mt", "nl", "no", "pt", "sv"
+      ];
+
+      const gpt4o      = [46066, 42924, 35247, 40193, 41970, 39799, 45072, 48725, 44035, 43869, 38191, 45086, 40620, 47006, 37488, 26878, 35416, 36864, 48217, 43233, 39483, 50214, 33517, 36257, 32933, 36305];
+      const gemma3_27b = [44936, 42372, 37033, 43721, 46203, 41200, 46373, 52127, 41865, 43749, 38036, 44846, 43555, 44671, 40125, 28127, 36180, 39292, 46564, 51438, 38326, 59736, 38522, 38907, 35105, 38316];
+      const llama3_3 = [55394, 40897, 43006, 50489, 53949, 48107, 58318, 62643, 51380, 50786, 43922, 50105, 48845, 44663, 44035, 27177, 41888, 43528, 57477, 56867, 44517, 65217, 43443, 42251, 40088, 42635];
+      const tildeLM = [37265, 37090, 36793, 36548, 37166, 36118, 37009, 37038, 37104, 37540, 37369, 37136, 36857, 37103, 40194, 31563, 42529, 40466, 47813, 44959, 44211, 51629, 42058, 39041, 41228, 39140];
+      const euroLLM_9b = [41905, 40133, 36693, 38717, 40465, 38988, 39630, 41303, 36722, 42868, 38197, 40416, 39129, 43048, 38055, 30162, 37409, 40455, 42772, 55737, 37348, 49414, 35638, 37077, 34603, 37175];
+      const teuken_7b = [36409, 31337, 33474, 30156, 30534, 31557, 30273, 31550, 32362, 35092, 55818, 41584, 31447, 64982, 31578, 29467, 34862, 50581, 32699, 55251, 45460, 41497, 46834, 35544, 32204, 30244];
+      const mistral_nemo = [45750, 43035, 36321, 44610, 45939, 41749, 48147, 53218, 43847, 44775, 41858, 46498, 43403, 48182, 41456, 27832, 36701, 36800, 44830, 52412, 38803, 64410, 39294, 39359, 35516, 39126];
+      const mistral_small_large = [59151, 57113, 48759, 56462, 61664, 54730, 60901, 67056, 58248, 55738, 57051, 59650, 54807, 59436, 50258, 31261, 48471, 49179, 61300, 63740, 49589, 69894, 49156, 48805, 47736, 47378];
+
+      // 2) Create the Plotly traces (one for each dataset)
+      const traceGPT4o = {
+        x: languages,
+        y: gpt4o,
+        name: 'gpt4o',
+        type: 'bar',
+        marker: {
+          color: '#142459' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>gpt4o</extra>'
+      };
+
+      const traceGemma = {
+        x: languages,
+        y: gemma3_27b,
+        name: 'Gemma3-27b',
+        type: 'bar',
+        marker: {
+          color: '#0F416D' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Gemma3-27b</extra>'
+      };
+
+      const traceLlama = {
+        x: languages,
+        y: llama3_3,
+        name: 'Llama3.3',
+        type: 'bar',
+        marker: {
+          color: '#176BA0' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Llama3.3</extra>'
+      };
+
+      const traceTilde = {
+        x: languages,
+        y: tildeLM,
+        name: 'TildeLM',
+        type: 'bar',
+        marker: {
+          color: '#BC383C' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>TildeLM</extra>'
+      };
+
+      const traceEuro = {
+        x: languages,
+        y: euroLLM_9b,
+        name: 'EuroLLM-9b',
+        type: 'bar',
+        marker: {
+          color: '#128ABF' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>EuroLLM-9b</extra>'
+      };
+      
+      const traceTeuken = {
+        x: languages,
+        y: teuken_7b,
+        name: 'Teuken-7B',
+        type: 'bar',
+        marker: {
+          color: '#19AADE' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Teuken-7B</extra>'
+      };
+      
+      const traceMistralNemo = {
+        x: languages,
+        y: mistral_nemo,
+        name: 'Mistral Nemo',
+        type: 'bar',
+        marker: {
+          color: '#18C7CD' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Mistral Nemo</extra>'
+      };
+      
+      
+      const traceMistralSmallLarge = {
+        x: languages,
+        y: mistral_small_large,
+        name: 'Mistral Small/Large',
+        type: 'bar',
+        marker: {
+          color: '#1DE4BD' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Mistral Small/Large</extra>'
+      };
+
+      // 3) Combine all traces
+      const data = [traceGPT4o, traceGemma, traceLlama, traceEuro, traceTeuken, traceMistralNemo, traceMistralSmallLarge, traceTilde];
+
+      // 4) Define the layout with grouped bars and interactive features
+      const layout = {
+        title: 'Token count for the same text human-translated in different languages',
+        barmode: 'group',
+        margin: {
+          l: 60,  // Left margin space (pixels)
+          r: 50,  
+          t: 100,
+          b: 80
+        },
+        xaxis: {
+          title: 'Language',
+          range: [-0.5, languages.length - 0.5]
+        },
+        yaxis: {
+          title: 'Token count',
+          // Force zero-based Y-axis for consistency
+          rangemode: 'tozero'
+        },
+        //hovermode: 'closest', // Ensures tooltips show at closest data point
+        legend: {
+          orientation: 'h',    // Horizontal legend (optional)
+          x: 0.1,              // Adjust position of the legend if you wish
+          y: 1.1
+        },
+        annotations: [
+            {
+              text: '* Text - FLORES-200 dataset (devtest split)',
+              x: 0,
+              y: -0.15,          // A negative y value moves it below the chart
+              xref: 'paper',
+              yref: 'paper',
+              xanchor: 'left',
+              yanchor: 'top',
+              showarrow: false,
+              font: {
+                size: 12,
+                color: 'grey'
+              }
+            }
+        ]
+      };
+
+      // 5) Render the chart inside the chartDiv
+      Plotly.newPlot('chartDiv', data, layout);
+
+      const gpt4oRatio      = [1.86, 1.93, 1.40, 2.02, 2.24, 1.79, 2.15, 2.21, 1.94, 1.63, 1.64, 2.00, 1.73, 2.05, 1.53, 1.08, 1.21, 1.22, 2.18, 1.90, 1.41, 2.12, 1.31, 1.51, 1.24, 1.58];
+      const gemma3_27bRatio = [1.81, 1.91, 1.47, 2.20, 2.46, 1.85, 2.21, 2.36, 1.85, 1.62, 1.64, 1.98, 1.86, 1.94, 1.63, 1.13, 1.23, 1.31, 2.11, 2.26, 1.37, 2.53, 1.50, 1.62, 1.32, 1.66];
+      const llama3_3Ratio   = [2.23, 1.84, 1.71, 2.54, 2.88, 2.16, 2.78, 2.83, 2.27, 1.89, 1.89, 2.22, 2.09, 1.94, 1.79, 1.09, 1.43, 1.45, 2.60, 2.50, 1.59, 2.76, 1.70, 1.76, 1.51, 1.85];
+      const tildeLMRatio    = [1.50, 1.67, 1.46, 1.84, 1.98, 1.63, 1.76, 1.68, 1.64, 1.39, 1.61, 1.64, 1.57, 1.61, 1.64, 1.27, 1.45, 1.34, 2.16, 1.98, 1.58, 2.18, 1.64, 1.63, 1.55, 1.70];
+      const euroLLM_9bRatio = [1.69, 1.81, 1.46, 1.95, 2.16, 1.75, 1.89, 1.87, 1.62, 1.59, 1.65, 1.79, 1.67, 1.87, 1.55, 1.21, 1.28, 1.34, 1.94, 2.45, 1.34, 2.09, 1.39, 1.55, 1.30, 1.61];
+      const teuken_7bRatio = [1.47, 1.41, 1.33, 1.52, 1.63, 1.42, 1.44, 1.43, 1.43, 1.30, 2.40, 1.84, 1.34, 2.83, 1.28, 1.19, 1.19, 1.68, 1.48, 2.43, 1.63, 1.75, 1.83, 1.48, 1.21, 1.31];
+      const mistral_nemoRatio = [1.84, 1.94, 1.44, 2.24, 2.45, 1.88, 2.30, 2.41, 1.93, 1.66, 1.80, 2.06, 1.85, 2.10, 1.69, 1.12, 1.25, 1.22, 2.03, 2.31, 1.39, 2.72, 1.54, 1.64, 1.34, 1.70];
+      const mistral_small_largeRatio = [2.38, 2.57, 1.94, 2.84, 3.29, 2.46, 2.90, 3.03, 2.57, 2.07, 2.46, 2.64, 2.34, 2.59, 2.04, 1.26, 1.65, 1.63, 2.78, 2.80, 1.77, 2.96, 1.92, 2.04, 1.80, 2.06];
+      
+      // 2) Create the Plotly traces (one for each dataset)
+      const traceGPT4oRatio = {
+        x: languages,
+        y: gpt4oRatio,
+        name: 'gpt4o',
+        type: 'bar',
+        marker: {
+          color: '#142459' // Vibrant pinkish-red
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>gpt4o</extra>'
+      };
+
+      const traceGemmaRatio = {
+        x: languages,
+        y: gemma3_27bRatio,
+        name: 'Gemma3-27b',
+        type: 'bar',
+        marker: {
+          color: '#0F416D' // Vibrant blue
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Gemma3-27b</extra>'
+      };
+
+      const traceLlamaRatio = {
+        x: languages,
+        y: llama3_3Ratio,
+        name: 'Llama3.3',
+        type: 'bar',
+        marker: {
+          color: '#176BA0' // Vibrant yellow
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Llama3.3</extra>'
+      };
+
+      const traceTildeRatio = {
+        x: languages,
+        y: tildeLMRatio,
+        name: 'TildeLM',
+        type: 'bar',
+        marker: {
+          color: '#BC383C' // Vibrant purple
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>TildeLM</extra>'
+      };
+
+      const traceEuroRatio = {
+        x: languages,
+        y: euroLLM_9bRatio,
+        name: 'EuroLLM-9b',
+        type: 'bar',
+        marker: {
+          color: '#128ABF' // Vibrant orange
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>EuroLLM-9b</extra>'
+      };
+      
+      const traceTeukenRatio = {
+        x: languages,
+        y: teuken_7bRatio,
+        name: 'Teuken-7B',
+        type: 'bar',
+        marker: {
+          color: '#19AADE' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Teuken-7B</extra>'
+      };
+      
+      const traceMistralNemoRatio = {
+        x: languages,
+        y: mistral_nemoRatio,
+        name: 'Mistral Nemo',
+        type: 'bar',
+        marker: {
+          color: '#18C7CD' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Mistral Nemo</extra>'
+      };
+      
+      
+      const traceMistralSmallLargeRatio = {
+        x: languages,
+        y: mistral_small_largeRatio,
+        name: 'Mistral Small/Large',
+        type: 'bar',
+        marker: {
+          color: '#1DE4BD' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Mistral Small/Large</extra>'
+      };
+
+      // 3) Combine all traces
+      const dataRatio = [traceGPT4oRatio, traceGemmaRatio, traceLlamaRatio, traceEuroRatio, traceTeukenRatio, traceMistralNemoRatio, traceMistralSmallLargeRatio, traceTildeRatio];
+
+      // 4) Define the layout with grouped bars and interactive features
+      const layoutRatio = {
+        title: 'Word to token ratio for the same text human-translated in different languages',
+        barmode: 'group',
+        margin: {
+          l: 60,  // Left margin space (pixels)
+          r: 50,  
+          t: 100,
+          b: 80
+        },
+        xaxis: {
+          title: 'Language',
+          range: [-0.5, languages.length - 0.5]
+        },
+        yaxis: {
+          title: 'Word to token ratio',
+          // Force zero-based Y-axis for consistency
+          rangemode: 'tozero'
+        },
+        //hovermode: 'closest', // Ensures tooltips show at closest data point
+        legend: {
+          orientation: 'h',    // Horizontal legend (optional)
+          x: 0.1,              // Adjust position of the legend if you wish
+          y: 1.1
+        },
+        annotations: [
+            {
+              text: '* Text - FLORES-200 dataset (devtest split)',
+              x: 0,
+              y: -0.15,          // A negative y value moves it below the chart
+              xref: 'paper',
+              yref: 'paper',
+              xanchor: 'left',
+              yanchor: 'top',
+              showarrow: false,
+              font: {
+                size: 12,
+                color: 'grey'
+              }
+            }
+        ]
+      };
+
+      // 5) Render the chart inside the chartDiv
+      Plotly.newPlot('chartDiv2', dataRatio, layoutRatio);
+      
+      
+      const models = ["Gemma3-27b", "Llama3.3", "EuroLLM-9b", "Teuken-7B", "Mistral Nemo", "Mistral Small/Large", "TildeLM"];
+      const vocab_sizes = [262144, 128000, 128000, 250680, 131000, 32768, 131072];
+
+      const traceModelSizes = {
+        x: models,
+        y: vocab_sizes,
+        name: 'Model',
+        type: 'bar',
+        marker: {
+          color: '#142459' 
+        },
+        hovertemplate: 'Model: %{x}<br>Value: %{y}'
+      };
+
+      const dataVocabSizes = [traceModelSizes];
+
+      const layoutVocabSizes = {
+        title: 'Tokenizer vocabulary sizes',
+        barmode: 'group',
+        margin: {
+          l: 60,  // Left margin space (pixels)
+          r: 50,  
+          t: 100,
+          b: 80
+        },
+        xaxis: {
+          title: 'Model',
+          range: [-0.5, models.length - 0.5]
+        },
+        yaxis: {
+          title: 'Tokenizer vocabulary size',
+          // Force zero-based Y-axis for consistency
+          rangemode: 'tozero'
+        },
+        //hovermode: 'closest', // Ensures tooltips show at closest data point
+        legend: {
+          orientation: 'h',    // Horizontal legend (optional)
+          x: 0.1,              // Adjust position of the legend if you wish
+          y: 1.1
+        }
+        
+      };
+
+      Plotly.newPlot('chartDiv3', dataVocabSizes, layoutVocabSizes);
+      
+      
+      
+      const focus_languages = [
+        "bg", "cs", "et", "fi", "hr", "lt", "lv", "pl", "ru", "sk", "sl", "uk"
+      ];
+
+      const focus_gpt4o      = [46066, 42924, 40193, 41970, 39799, 45072, 48725, 44035, 38191, 45086, 40620, 47006];
+      const focus_gemma3_27b = [44936, 42372, 43721, 46203, 41200, 46373, 52127, 41865, 38036, 44846, 43555, 44671];
+      const focus_llama3_3 = [55394, 40897, 50489, 53949, 48107, 58318, 62643, 51380, 43922, 50105, 48845, 44663];
+      const focus_tildeLM = [37265, 37090, 36548, 37166, 36118, 37009, 37038, 37104, 37369, 37136, 36857, 37103];
+      const focus_euroLLM_9b = [41905, 40133, 38717, 40465, 38988, 39630, 41303, 36722, 38197, 40416, 39129, 43048];
+      const focus_teuken_7b = [36409, 31337, 30156, 30534, 31557, 30273, 31550, 32362, 55818, 41584, 31447, 64982];
+      const focus_mistral_nemo = [45750, 43035, 44610, 45939, 41749, 48147, 53218, 43847, 41858, 46498, 43403, 48182];
+      const focus_mistral_small_large = [59151, 57113, 56462, 61664, 54730, 60901, 67056, 58248, 57051, 59650, 54807, 59436];
+
+      // 2) Create the Plotly traces (one for each dataset)
+      const focus_traceGPT4o = {
+        x: focus_languages,
+        y: focus_gpt4o,
+        name: 'gpt4o',
+        type: 'bar',
+        marker: {
+          color: '#142459' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>gpt4o</extra>'
+      };
+
+      const focus_traceGemma = {
+        x: focus_languages,
+        y: focus_gemma3_27b,
+        name: 'Gemma3-27b',
+        type: 'bar',
+        marker: {
+          color: '#0F416D' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Gemma3-27b</extra>'
+      };
+
+      const focus_traceLlama = {
+        x: focus_languages,
+        y: focus_llama3_3,
+        name: 'Llama3.3',
+        type: 'bar',
+        marker: {
+          color: '#176BA0' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Llama3.3</extra>'
+      };
+
+      const focus_traceTilde = {
+        x: focus_languages,
+        y: focus_tildeLM,
+        name: 'TildeLM',
+        type: 'bar',
+        marker: {
+          color: '#BC383C' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>TildeLM</extra>'
+      };
+
+      const focus_traceEuro = {
+        x: focus_languages,
+        y: focus_euroLLM_9b,
+        name: 'EuroLLM-9b',
+        type: 'bar',
+        marker: {
+          color: '#128ABF' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>EuroLLM-9b</extra>'
+      };
+      
+      const focus_traceTeuken = {
+        x: focus_languages,
+        y: focus_teuken_7b,
+        name: 'Teuken-7B',
+        type: 'bar',
+        marker: {
+          color: '#19AADE' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Teuken-7B</extra>'
+      };
+      
+      const focus_traceMistralNemo = {
+        x: focus_languages,
+        y: focus_mistral_nemo,
+        name: 'Mistral Nemo',
+        type: 'bar',
+        marker: {
+          color: '#18C7CD' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Mistral Nemo</extra>'
+      };
+      
+      
+      const focus_traceMistralSmallLarge = {
+        x: focus_languages,
+        y: focus_mistral_small_large,
+        name: 'Mistral Small/Large',
+        type: 'bar',
+        marker: {
+          color: '#1DE4BD' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Mistral Small/Large</extra>'
+      };
+
+      // 3) Combine all traces
+      const focus_data = [focus_traceGPT4o, focus_traceGemma, focus_traceLlama, focus_traceEuro, focus_traceTeuken, focus_traceMistralNemo, focus_traceMistralSmallLarge, focus_traceTilde];
+
+      // 4) Define the layout with grouped bars and interactive features
+      const focus_layout = {
+        title: 'Token count for the same text human-translated in different languages',
+        barmode: 'group',
+        margin: {
+          l: 60,  // Left margin space (pixels)
+          r: 50,  
+          t: 100,
+          b: 80
+        },
+        xaxis: {
+          title: 'Language',
+          range: [-0.5, focus_languages.length - 0.5]
+        },
+        yaxis: {
+          title: 'Token count',
+          // Force zero-based Y-axis for consistency
+          rangemode: 'tozero'
+        },
+        //hovermode: 'closest', // Ensures tooltips show at closest data point
+        legend: {
+          orientation: 'h',    // Horizontal legend (optional)
+          x: 0.1,              // Adjust position of the legend if you wish
+          y: 1.1
+        },
+        annotations: [
+            {
+              text: '* Text - FLORES-200 dataset (devtest split)',
+              x: 0,
+              y: -0.15,          // A negative y value moves it below the chart
+              xref: 'paper',
+              yref: 'paper',
+              xanchor: 'left',
+              yanchor: 'top',
+              showarrow: false,
+              font: {
+                size: 12,
+                color: 'grey'
+              }
+            }
+        ]
+      };
+
+      // 5) Render the chart inside the chartDiv
+      Plotly.newPlot('chartDiv4', focus_data, focus_layout);
+
+      
+      
+    </script>
+  </body>
+</html>
