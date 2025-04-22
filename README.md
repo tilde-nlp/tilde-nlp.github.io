@@ -1,5 +1,8 @@
 # tilde-bench.github.io
-TildeBench - a leaderboard for large language model (LLM) performance in Baltic, Finnic & Slavic languages
+
+<img src="tilde-bench.png" alt="TildeBench" width="100"/>
+
+**TildeBench** - a leaderboard for large language model (LLM) performance in Baltic, Finnic & Slavic languages
 
 We are interested in three aspects:
 
