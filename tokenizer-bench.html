@@ -77,8 +77,8 @@
     <div>For Mistral, the scores are the ones published by Mistral. For other models, the score is the number returned by AutoTokenizer.vocab_size.</div>
     <div id="chartDiv3" style="width:900px; height:600px;"></div>
 
-    <h2>Token count comparison for TildeLM focus languages</h2>
-    <div>TildeLM is focused on Baltic, Finnic, and Slavic languages where we aim to have language equity. This for the tokenizer means that it should split the same text (regardless of the language) in more or less equal numbers of tokens.</div>
+    <h2>Token count comparison for TildeOpen focus languages</h2>
+    <div>TildeOpen is focused on Baltic, Finnic, and Slavic languages where we aim to have language equity. This for the tokenizer means that it should split the same text (regardless of the language) in more or less equal numbers of tokens.</div>
     <div id="chartDiv4" style="width:900px; height:600px;"></div>
   </div>
     <script>
@@ -90,7 +90,7 @@
       const gpt4o      = [46066, 42924, 35247, 40193, 41970, 39799, 45072, 48725, 44035, 43869, 38191, 45086, 40620, 47006, 37488, 26878, 35416, 36864, 48217, 43233, 39483, 50214, 33517, 36257, 32933, 36305];
       const gemma3_27b = [44936, 42372, 37033, 43721, 46203, 41200, 46373, 52127, 41865, 43749, 38036, 44846, 43555, 44671, 40125, 28127, 36180, 39292, 46564, 51438, 38326, 59736, 38522, 38907, 35105, 38316];
       const llama3_3 = [55394, 40897, 43006, 50489, 53949, 48107, 58318, 62643, 51380, 50786, 43922, 50105, 48845, 44663, 44035, 27177, 41888, 43528, 57477, 56867, 44517, 65217, 43443, 42251, 40088, 42635];
-      const tildeLM = [37265, 37090, 36793, 36548, 37166, 36118, 37009, 37038, 37104, 37540, 37369, 37136, 36857, 37103, 40194, 31563, 42529, 40466, 47813, 44959, 44211, 51629, 42058, 39041, 41228, 39140];
+      const tildeOpen = [37265, 37090, 36793, 36548, 37166, 36118, 37009, 37038, 37104, 37540, 37369, 37136, 36857, 37103, 40194, 31563, 42529, 40466, 47813, 44959, 44211, 51629, 42058, 39041, 41228, 39140];
       const euroLLM_9b = [41905, 40133, 36693, 38717, 40465, 38988, 39630, 41303, 36722, 42868, 38197, 40416, 39129, 43048, 38055, 30162, 37409, 40455, 42772, 55737, 37348, 49414, 35638, 37077, 34603, 37175];
       const teuken_7b = [36409, 31337, 33474, 30156, 30534, 31557, 30273, 31550, 32362, 35092, 55818, 41584, 31447, 64982, 31578, 29467, 34862, 50581, 32699, 55251, 45460, 41497, 46834, 35544, 32204, 30244];
       const mistral_nemo = [45750, 43035, 36321, 44610, 45939, 41749, 48147, 53218, 43847, 44775, 41858, 46498, 43403, 48182, 41456, 27832, 36701, 36800, 44830, 52412, 38803, 64410, 39294, 39359, 35516, 39126];
@@ -132,13 +132,13 @@
 
       const traceTilde = {
         x: languages,
-        y: tildeLM,
-        name: 'TildeLM',
+        y: tildeOpen,
+        name: 'TildeOpen',
         type: 'bar',
         marker: {
           color: '#BC383C' 
         },
-        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>TildeLM</extra>'
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>TildeOpen</extra>'
       };
 
       const traceEuro = {
@@ -238,7 +238,7 @@
       const gpt4oRatio      = [1.86, 1.93, 1.40, 2.02, 2.24, 1.79, 2.15, 2.21, 1.94, 1.63, 1.64, 2.00, 1.73, 2.05, 1.53, 1.08, 1.21, 1.22, 2.18, 1.90, 1.41, 2.12, 1.31, 1.51, 1.24, 1.58];
       const gemma3_27bRatio = [1.81, 1.91, 1.47, 2.20, 2.46, 1.85, 2.21, 2.36, 1.85, 1.62, 1.64, 1.98, 1.86, 1.94, 1.63, 1.13, 1.23, 1.31, 2.11, 2.26, 1.37, 2.53, 1.50, 1.62, 1.32, 1.66];
       const llama3_3Ratio   = [2.23, 1.84, 1.71, 2.54, 2.88, 2.16, 2.78, 2.83, 2.27, 1.89, 1.89, 2.22, 2.09, 1.94, 1.79, 1.09, 1.43, 1.45, 2.60, 2.50, 1.59, 2.76, 1.70, 1.76, 1.51, 1.85];
-      const tildeLMRatio    = [1.50, 1.67, 1.46, 1.84, 1.98, 1.63, 1.76, 1.68, 1.64, 1.39, 1.61, 1.64, 1.57, 1.61, 1.64, 1.27, 1.45, 1.34, 2.16, 1.98, 1.58, 2.18, 1.64, 1.63, 1.55, 1.70];
+      const tildeOpenRatio    = [1.50, 1.67, 1.46, 1.84, 1.98, 1.63, 1.76, 1.68, 1.64, 1.39, 1.61, 1.64, 1.57, 1.61, 1.64, 1.27, 1.45, 1.34, 2.16, 1.98, 1.58, 2.18, 1.64, 1.63, 1.55, 1.70];
       const euroLLM_9bRatio = [1.69, 1.81, 1.46, 1.95, 2.16, 1.75, 1.89, 1.87, 1.62, 1.59, 1.65, 1.79, 1.67, 1.87, 1.55, 1.21, 1.28, 1.34, 1.94, 2.45, 1.34, 2.09, 1.39, 1.55, 1.30, 1.61];
       const teuken_7bRatio = [1.47, 1.41, 1.33, 1.52, 1.63, 1.42, 1.44, 1.43, 1.43, 1.30, 2.40, 1.84, 1.34, 2.83, 1.28, 1.19, 1.19, 1.68, 1.48, 2.43, 1.63, 1.75, 1.83, 1.48, 1.21, 1.31];
       const mistral_nemoRatio = [1.84, 1.94, 1.44, 2.24, 2.45, 1.88, 2.30, 2.41, 1.93, 1.66, 1.80, 2.06, 1.85, 2.10, 1.69, 1.12, 1.25, 1.22, 2.03, 2.31, 1.39, 2.72, 1.54, 1.64, 1.34, 1.70];
@@ -280,13 +280,13 @@
 
       const traceTildeRatio = {
         x: languages,
-        y: tildeLMRatio,
-        name: 'TildeLM',
+        y: tildeOpenRatio,
+        name: 'TildeOpen',
         type: 'bar',
         marker: {
           color: '#BC383C' // Vibrant purple
         },
-        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>TildeLM</extra>'
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>TildeOpen</extra>'
       };
 
       const traceEuroRatio = {
@@ -384,7 +384,7 @@
       Plotly.newPlot('chartDiv2', dataRatio, layoutRatio);
       
       
-      const models = ["Gemma3-27b", "Llama3.3", "EuroLLM-9b", "Teuken-7B", "Mistral Nemo", "Mistral Small/Large", "TildeLM"];
+      const models = ["Gemma3-27b", "Llama3.3", "EuroLLM-9b", "Teuken-7B", "Mistral Nemo", "Mistral Small/Large", "TildeOpen"];
       const vocab_sizes = [262144, 128000, 128000, 250680, 131000, 32768, 131072];
 
       const traceModelSizes = {
@@ -438,7 +438,7 @@
       const focus_gpt4o      = [46066, 42924, 40193, 41970, 39799, 45072, 48725, 44035, 38191, 45086, 40620, 47006];
       const focus_gemma3_27b = [44936, 42372, 43721, 46203, 41200, 46373, 52127, 41865, 38036, 44846, 43555, 44671];
       const focus_llama3_3 = [55394, 40897, 50489, 53949, 48107, 58318, 62643, 51380, 43922, 50105, 48845, 44663];
-      const focus_tildeLM = [37265, 37090, 36548, 37166, 36118, 37009, 37038, 37104, 37369, 37136, 36857, 37103];
+      const focus_tildeOpen = [37265, 37090, 36548, 37166, 36118, 37009, 37038, 37104, 37369, 37136, 36857, 37103];
       const focus_euroLLM_9b = [41905, 40133, 38717, 40465, 38988, 39630, 41303, 36722, 38197, 40416, 39129, 43048];
       const focus_teuken_7b = [36409, 31337, 30156, 30534, 31557, 30273, 31550, 32362, 55818, 41584, 31447, 64982];
       const focus_mistral_nemo = [45750, 43035, 44610, 45939, 41749, 48147, 53218, 43847, 41858, 46498, 43403, 48182];
@@ -480,13 +480,13 @@
 
       const focus_traceTilde = {
         x: focus_languages,
-        y: focus_tildeLM,
-        name: 'TildeLM',
+        y: focus_tildeOpen,
+        name: 'TildeOpen',
         type: 'bar',
         marker: {
           color: '#BC383C' 
         },
-        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>TildeLM</extra>'
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>TildeOpen</extra>'
       };
 
       const focus_traceEuro = {
