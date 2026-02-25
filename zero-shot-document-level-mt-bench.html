@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Document-level MT Bench</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link rel="stylesheet" href="prism.css" data-noprefix />
+  <script src="prism.js"></script>
+  <style>
+    body { background-color: #f8f9fa; }
+    .section-card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .small-muted { color: #6c757d; font-size: 0.95rem; }
+    .toc a { text-decoration: none; }
+  </style>
+  <style>
+        body {
+          background-color: #f8f9fa;
+          margin-left: 80px; /* Prevent content from being hidden behind the sidebar */
+        }
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          width: 80px;
+          height: 100vh;
+          background-color: #343a40;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding-top: 1rem;
+        }
+        .sidebar a {
+          margin-bottom: 1rem;
+          display: block;
+        }
+        .sidebar img {
+          max-width: 50px;
+          filter: brightness(0.5);
+        }
+        .sidebar a:hover img {
+          filter: brightness(0.8);
+        }
+    </style>
+    <style>
+    /* Style for the table */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    td, th {
+      border: 1px solid #ccc;
+      padding: 5px;
+      text-align: left;
+    }
+    
+    /* Styles for the bar visualization */
+    .bar-container {
+      position: relative;
+      display: inline-block;
+      width: 100px;  /* You can adjust this width as needed */
+      height: 10px;
+      background-color: #f0f0f0;
+      border-radius: 3px;
+      overflow: hidden;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .bar {
+      height: 100%;
+      background-color: #4285F4;
+      width: 0%; /* This will be set dynamically */
+    }
+    .bar-label {
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+  <nav class="sidebar">
+    <a href="index.html" data-bs-toggle="tooltip" data-bs-placement="right" title="Home">
+      <img src="tilde-bench.png" alt="Zero-shot Icon" class="img-fluid">
+    </a>
+    <a href="zero-shot-mcqa-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="Zero-shot In-Context Multi-Choice Question-Answering Benchmark">
+      <img src="zero-shot-mcqa-bench.png" alt="Zero-shot Icon" class="img-fluid">
+    </a>
+    <a href="one-shot-empty-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="One-shot Sentence-Level Machine Translation Benchmark">
+      <img src="one-shot-mt-bench.png" alt="One-shot Icon" class="img-fluid">
+    </a>
+    <a href="zero-shot-document-level-empty-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="Zero-shot Document-Level Machine Translation Benchmark">
+      <img src="document-bench.png" alt="Document Bench Icon" class="img-fluid">
+    </a>
+    <a href="one-shot-empty-robustness-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="One-shot Sentence-Level MT Robustness Benchmark">
+      <img src="robust-empty-bench.png" alt="One-shot Sentence-Level MT Robustness Benchmark" class="img-fluid">
+    </a>
+    <a href="tokenizer-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="LLM Tokenizer Benchmark">
+      <img src="tokenizer-bench.png" alt="Tokenizer Icon" class="img-fluid">
+    </a>
+    <a href="text-generation-error-analysis-euro-models.html" data-bs-toggle="tooltip" data-bs-placement="right" title="LLM Error Analysis for Languages of the Baltic States">
+      <img src="error-analysis.png" alt="Error Analysis Icon" class="img-fluid">
+    </a>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container py-5">
+    <h1>Zero-Shot Document-Level Machine Translation Benchmark</h1>
+    <img src="document-bench.png" width="100" />
+    <p><b>Task:</b> We test here how well various large language models (LLM) and commercial MT services translate documents (text spanning up to 20 paragraphs in each request).<br /></p>
+    <p class="alert alert-warning" role="alert"><b>Why up to 20 paragraphs only?</b> Large language models (even the best-performing ones) cannot yet output reliably the same number of paragraphs as found in the input. The longer the text, the more likely that the models will start hallucinating (merging content, dropping some content, etc.) when generating translations. Our tests showed that at 20 paragraphs models were still more or less reliable.</p>
+    <p><b>Datasets</b>:
+      <ul>
+        <li><a href="https://huggingface.co/datasets/google/wmt24pp" target="_blank">WMT24++ dataset</a>. The dataset covers 56 languages. We test translation only for 14 translation directions.</li>
+        <li><a href="https://github.com/wmt-conference/wmt25-general-mt" target="_blank">WMT25 General Machine Translation Shared Task test dataset</a>. The dataset covers 16 translation directions. We test translation only for 7 translation directions involving European languages.</li>
+      </ul>
+    </p>
+    <p><b>Prompt example:</b></p>
+    <p>
+       <pre style="width:100%; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;"><code class="language-json" style="width:800px; white-space: pre-wrap; white-space: -pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap;">{"messages":
+    [{"role": "system", "content": "You are a professional translator that translates documents. Translate the document between the backticks (```) from English into Latvian. Enclose the translation also with backticks (```...```). Follow these requirements when translating: 1) do not add extra words, 2) preserve the exact meaning of the source text in the translation, 3) preserve the style of the source text in the translation, 4) output the translation using the same format (each line must start with the paragraph index), 5) do not apply formatting to the translation."},
+    {"role": "user", "content": "English:\n```\n<1> This is the first paragraph.\n<2> This is the second paragraph.\n```\n"}]
+}</code></pre>
+    </p>
+    <p class="alert alert-secondary" role="alert">
+      <i>Note 1:</i> This is the typical message structure passed to the Ollama, OpenAI, Claude, etc. LLM inferencing clients and passed to the apply_chat_template() method for models stored in Hugging Face and inferenced directly on python using the transformers library, however, the messages are formatted for each LLM differently depending on what the exact chat template for each model defines.<br />
+      <i>Note 2:</i> TildeOpen MT model(s) support one specific translation instruction (e.g.: "Translate the following text from X to Y: {text}"). The model is prompted using one user message.
+      <i>Note 3:</i> The GPT-5.2 model is prompted with reasoning_effort: none.<br />
+      <i>Note 4:</i> TranslateGemma models are prompted using the prompt defined in the model's <a href="https://ollama.com/library/translategemma" target="_blank">documentation</a> in the Ollama repository.
+    </p>
+    <p><b>Metrics</b>: ChrF (calculated using <a href="https://github.com/mjpost/sacrebleu" target="_blank">sacrebleu</a>), COMET (we use the <a href="https://github.com/Unbabel/COMET" target="_blank">Unbabel/wmt22-comet-da</a> model). Although translation is performed on document level. There are no good document-level metrics. We evaluate translation quality using segment-level metrics on segment level.</p>
+
+    <h2>List of Benchmarked Models</h2>
+    <p class="alert alert-secondary" role="alert">
+      <i>Note 2:</i> Most Ollama models are 4 bit quantized models, whereas the TildeOpen MT model(s) is not quantized. We have analyzed the impact of quantization on MT quality (see <a href="https://aclanthology.org/2025.nodalida-1.30.pdf" target="_blank">this paper</a>) and found that it is mostly negligible for larger models (e.g., for the Gemma&nbsp;2 27B model, the quality drop was 0.001 COMET point). However, we want to be transparent about this and it is why we include URLs to the exact models we benchmarked.<br />
+    </p>
+    <div class="mb-1">
+      <button type="button" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#collapseOne">List of benchmarked models (click to expand)</button>
+      <div id="collapseOne" class="collapse">
+        <table class="table table-striped table-bordered">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Name or family</th>
+              <th>Model ID</th>
+              <th>Size (in billions of parameters)</th>
+              <th>What did we use for inference?</th>
+              <th>Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Group 1: Decoder-only LLM (5 rows) -->
+            <tr>
+              <td rowspan="5">Decoder-only LLM</td>
+              <td rowspan="1">Google Gemma&nbsp;2</td>
+              <td>
+                <a href="https://ollama.com/library/gemma2:27b" target="_blank">gemma2:27b</a>
+              </td>
+              <td><div class="bar-container"><div class="bar" style="width: 13.5%;"></div></div><br />
+                <span class="bar-label">27</span>
+              </td>
+              <td>Ollama</td>
+              <td></td>
+            </tr>
+            <tr>
+              <!-- "Google Gemma 3" spans three rows -->
+              <td rowspan="1">Google Gemma&nbsp;3</td>
+              <td>
+                <a href="https://ollama.com/library/gemma3:27b" target="_blank">gemma3:27b</a>
+              </td>
+              <td><div class="bar-container">
+                    <div class="bar" style="width: 13.5%;"></div>
+                  </div><br />
+                  <span class="bar-label">27</span></td>
+              <td>Ollama</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td rowspan="1">TranslateGemma</td>
+              <td>
+                <a href="https://ollama.com/library/translategemma:27b" target="_blank">translategemma:27b</a>
+              </td>
+              <td><div class="bar-container">
+                    <div class="bar" style="width: 13.5%;"></div>
+                  </div><br />
+                  <span class="bar-label">27</span></td>
+              <td>Ollama</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>GPT-4.1</td>
+              <td>
+                <a href="https://platform.openai.com/docs/models/gpt-4.1" target="_blank">gpt-4.1-2025-04-14</a>
+              </td>
+              <td>Unknown</td>
+              <td>OpenAI API</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Llama 3.3</td>
+              <td>
+                <a href="https://ollama.com/library/llama3.3" target="_blank">llama3.3</a>
+              </td>
+              <td><div class="bar-container">
+                    <div class="bar" style="width: 35%;"></div>
+                  </div><br />
+                  <span class="bar-label">70</span></td>
+              <td>Ollama</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>TildeOpen</td>
+              <td>
+                <a href="https://translate.tilde.ai/" target="_blank">tildeopen-mt-v10</a>
+              </td>
+              <td><div class="bar-container">
+                    <div class="bar" style="width: 14.57%;"></div>
+                  </div><br />
+                  <span class="bar-label">30</span></td>
+              <td>vLLM</td>
+              <td>This is TildeOpen LLM fine-tuned for translation tasks.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <h2>Results</h2>
+    <div class="container-fluid py-4">
+
+<div class='section-card toc'>
+<h5>Test sets</h5><div class='d-flex flex-wrap gap-3'>
+<a href='#wmt24pp' class='badge text-bg-dark'>wmt24pp</a>
+<a href='#wmt25_genmt' class='badge text-bg-dark'>wmt25_genmt</a>
+</div></div>
+<div class='section-card' id='wmt24pp'>
+<h2 class='mb-1'>wmt24pp</h2>
+<div class='small-muted'>Evaluated models: <b>3</b> &nbsp;|&nbsp; Translation directions: <b>14</b></div>
+<h4 class='mt-4'>COMET scores</h4>
+
+<div id="wmt24pp_bar_doc_comet" style="width:100%;height:520px;"></div>
+<script>
+  var data_wmt24pp_bar_doc_comet = [{"x": ["en-et", "en-lt", "en-lv", "en-pl", "en-uk", "et-en", "et-lv", "lt-en", "lv-en", "lv-et", "lv-ru", "pl-en", "ru-lv", "uk-en"], "y": [0.869534, 0.837835, 0.832986, 0.822342, 0.832399, 0.872829, 0.860836, 0.837854, 0.847255, 0.860232, 0.82367, 0.837842, 0.824038, 0.843505], "name": "tildeopen-mt-v10-f01", "type": "bar", "marker": {"color": "#9fbe46"}, "legendgroup": "tildeopen-mt-v10-f01"}, {"x": ["en-et", "en-lt", "en-lv", "en-pl", "en-uk", "et-en", "et-lv", "lt-en", "lv-en", "lv-et", "lv-ru", "pl-en", "ru-lv", "uk-en"], "y": [0.878674, 0.86391, 0.858906, 0.857223, 0.864477, 0.86629, 0.851724, 0.83243, 0.841245, 0.853308, 0.837463, 0.833025, 0.828719, 0.838168], "name": "translategemma:27b", "type": "bar", "marker": {"color": "#00a6ff"}, "legendgroup": "translategemma:27b"}, {"x": ["en-et", "en-lt", "en-lv", "en-pl", "en-uk", "et-en", "et-lv", "lt-en", "lv-en", "lv-et", "lv-ru", "pl-en", "ru-lv", "uk-en"], "y": [0.886443, 0.863281, 0.86221, 0.851583, 0.863196, 0.873475, 0.859134, 0.83507, 0.845071, 0.862243, 0.830198, 0.836247, 0.824828, 0.844024], "name": "gpt-4.1-2025-04-14", "type": "bar", "marker": {"color": "#de0021"}, "legendgroup": "gpt-4.1-2025-04-14"}];
+  var layout_wmt24pp_bar_doc_comet = {"barmode": "group", "title": "wmt24pp \u2014 COMET scores", "xaxis": {"title": "Translation direction", "automargin": true}, "yaxis": {"title": "COMET", "automargin": true}, "legend": {"orientation": "h", "y": -0.25}, "margin": {"t": 60, "b": 120}};
+  Plotly.newPlot('wmt24pp_bar_doc_comet', data_wmt24pp_bar_doc_comet, layout_wmt24pp_bar_doc_comet);
+</script>
+
+<h4 class='mt-4'>ChrF scores</h4>
+
+<div id="wmt24pp_bar_doc_chrf" style="width:100%;height:520px;"></div>
+<script>
+  var data_wmt24pp_bar_doc_chrf = [{"x": ["en-et", "en-lt", "en-lv", "en-pl", "en-uk", "et-en", "et-lv", "lt-en", "lv-en", "lv-et", "lv-ru", "pl-en", "ru-lv", "uk-en"], "y": [57.8187, 48.5559, 55.2142, 47.9488, 54.5277, 65.2151, 53.825, 53.0724, 59.6248, 51.5912, 46.2898, 60.2793, 47.2586, 61.8977], "name": "tildeopen-mt-v10-f01", "type": "bar", "marker": {"color": "#9fbe46"}, "legendgroup": "tildeopen-mt-v10-f01"}, {"x": ["en-et", "en-lt", "en-lv", "en-pl", "en-uk", "et-en", "et-lv", "lt-en", "lv-en", "lv-et", "lv-ru", "pl-en", "ru-lv", "uk-en"], "y": [53.5759, 47.1151, 52.987, 47.1002, 54.1787, 63.0385, 50.3851, 52.0221, 58.1671, 48.5467, 47.0205, 58.5296, 46.1622, 60.4395], "name": "translategemma:27b", "type": "bar", "marker": {"color": "#00a6ff"}, "legendgroup": "translategemma:27b"}, {"x": ["en-et", "en-lt", "en-lv", "en-pl", "en-uk", "et-en", "et-lv", "lt-en", "lv-en", "lv-et", "lv-ru", "pl-en", "ru-lv", "uk-en"], "y": [57.9666, 48.5838, 55.8892, 48.7228, 54.9886, 64.4193, 53.0249, 51.7412, 58.5219, 51.018, 46.7071, 58.7943, 46.9179, 61.3613], "name": "gpt-4.1-2025-04-14", "type": "bar", "marker": {"color": "#de0021"}, "legendgroup": "gpt-4.1-2025-04-14"}];
+  var layout_wmt24pp_bar_doc_chrf = {"barmode": "group", "title": "wmt24pp \u2014 ChrF scores", "xaxis": {"title": "Translation direction", "automargin": true}, "yaxis": {"title": "ChrF", "automargin": true}, "legend": {"orientation": "h", "y": -0.25}, "margin": {"t": 60, "b": 120}};
+  Plotly.newPlot('wmt24pp_bar_doc_chrf', data_wmt24pp_bar_doc_chrf, layout_wmt24pp_bar_doc_chrf);
+</script>
+
+</div>
+<div class='section-card' id='wmt25_genmt'>
+<h2 class='mb-1'>wmt25_genmt</h2>
+<div class='small-muted'>Evaluated models: <b>6</b> &nbsp;|&nbsp; Translation directions: <b>7</b></div>
+<h4 class='mt-4'>COMET scores</h4>
+
+<div id="wmt25_genmt_bar_doc_comet" style="width:100%;height:520px;"></div>
+<script>
+  var data_wmt25_genmt_bar_doc_comet = [{"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [0.880493, 0.846737, 0.783842, 0.679071, 0.780076, 0.636976, 0.780879], "name": "llama3.3", "type": "bar", "marker": {"color": "#f29638"}, "legendgroup": "llama3.3"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [0.892673, 0.863845, 0.804673, 0.665658, 0.798695, 0.66375, 0.816614], "name": "gemma2:27b", "type": "bar", "marker": {"color": "#118f00"}, "legendgroup": "gemma2:27b"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [0.902114, 0.87515, 0.824866, 0.740118, 0.806237, 0.731186, 0.829889], "name": "gemma3:27b", "type": "bar", "marker": {"color": "#ffee92"}, "legendgroup": "gemma3:27b"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [0.903275, 0.869224, 0.853266, 0.780319, 0.794988, 0.806708, 0.820754], "name": "tildeopen-mt-v10-f01", "type": "bar", "marker": {"color": "#9fbe46"}, "legendgroup": "tildeopen-mt-v10-f01"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [0.916944, 0.893528, 0.865137, 0.811988, 0.825462, 0.713179, 0.857604], "name": "gpt-4.1-2025-04-14", "type": "bar", "marker": {"color": "#de0021"}, "legendgroup": "gpt-4.1-2025-04-14"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [0.902453, 0.885033, 0.858385, 0.792102, 0.832396, 0.80918, 0.852909], "name": "translategemma:27b", "type": "bar", "marker": {"color": "#00a6ff"}, "legendgroup": "translategemma:27b"}];
+  var layout_wmt25_genmt_bar_doc_comet = {"barmode": "group", "title": "wmt25_genmt \u2014 COMET scores", "xaxis": {"title": "Translation direction", "automargin": true}, "yaxis": {"title": "COMET", "automargin": true}, "legend": {"orientation": "h", "y": -0.25}, "margin": {"t": 60, "b": 120}};
+  Plotly.newPlot('wmt25_genmt_bar_doc_comet', data_wmt25_genmt_bar_doc_comet, layout_wmt25_genmt_bar_doc_comet);
+</script>
+
+<h4 class='mt-4'>ChrF scores</h4>
+
+<div id="wmt25_genmt_bar_doc_chrf" style="width:100%;height:520px;"></div>
+<script>
+  var data_wmt25_genmt_bar_doc_chrf = [{"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [55.9925, 50.9161, 44.2827, 39.3484, 47.7087, 4.1568, 48.2068], "name": "llama3.3", "type": "bar", "marker": {"color": "#f29638"}, "legendgroup": "llama3.3"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [58.8217, 52.0786, 46.1089, 38.5707, 48.7915, 4.9226, 51.7114], "name": "gemma2:27b", "type": "bar", "marker": {"color": "#118f00"}, "legendgroup": "gemma2:27b"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [60.8485, 54.713, 48.3453, 43.607, 50.1698, 21.6405, 54.0835], "name": "gemma3:27b", "type": "bar", "marker": {"color": "#ffee92"}, "legendgroup": "gemma3:27b"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [60.0426, 55.6178, 52.5877, 49.4471, 49.8778, 56.3977, 52.8078], "name": "tildeopen-mt-v10-f01", "type": "bar", "marker": {"color": "#9fbe46"}, "legendgroup": "tildeopen-mt-v10-f01"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [63.3135, 59.5063, 52.5405, 51.9316, 49.7182, 4.5482, 59.0136], "name": "gpt-4.1-2025-04-14", "type": "bar", "marker": {"color": "#de0021"}, "legendgroup": "gpt-4.1-2025-04-14"}, {"x": ["cs-uk", "en-cs", "en-et", "en-is", "en-ru", "en-sr", "en-uk"], "y": [57.9469, 53.4399, 49.3195, 46.1083, 49.2917, 39.9009, 53.9015], "name": "translategemma:27b", "type": "bar", "marker": {"color": "#00a6ff"}, "legendgroup": "translategemma:27b"}];
+  var layout_wmt25_genmt_bar_doc_chrf = {"barmode": "group", "title": "wmt25_genmt \u2014 ChrF scores", "xaxis": {"title": "Translation direction", "automargin": true}, "yaxis": {"title": "ChrF", "automargin": true}, "legend": {"orientation": "h", "y": -0.25}, "margin": {"t": 60, "b": 120}};
+  Plotly.newPlot('wmt25_genmt_bar_doc_chrf', data_wmt25_genmt_bar_doc_chrf, layout_wmt25_genmt_bar_doc_chrf);
+</script>
+
+</div>
+</div></body></html>

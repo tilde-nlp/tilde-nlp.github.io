@@ -47,6 +47,9 @@
     <a href="zero-shot-mcqa-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="Zero-shot In-Context Multi-Choice Question-Answering Benchmark">
       <img src="zero-shot-mcqa-bench.png" alt="Zero-shot Icon" class="img-fluid">
     </a>
+    <a href="zero-shot-document-level-empty-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="Zero-shot Document-Level Machine Translation Benchmark">
+      <img src="document-bench.png" alt="Document Bench Icon" class="img-fluid">
+    </a>
     <a href="one-shot-empty-bench.html" data-bs-toggle="tooltip" data-bs-placement="right" title="One-shot Sentence-Level Machine Translation Benchmark">
       <img src="one-shot-mt-bench.png" alt="One-shot Icon" class="img-fluid">
     </a>
@@ -87,7 +90,7 @@
         "bg", "cs", "de", "et", "fi", "hr", "lt", "lv", "pl", "ro", "ru", "sk", "sl", "uk", "da", "en", "es", "fr", "hu", "is", "it", "mt", "nl", "no", "pt", "sv"
       ];
 
-      const gpt4o      = [46066, 42924, 35247, 40193, 41970, 39799, 45072, 48725, 44035, 43869, 38191, 45086, 40620, 47006, 37488, 26878, 35416, 36864, 48217, 43233, 39483, 50214, 33517, 36257, 32933, 36305];
+      const gpt52      = [46066, 42924, 35247, 40193, 41970, 39799, 45072, 48725, 44035, 43869, 38191, 45086, 40620, 47006, 37488, 26878, 35416, 36864, 48217, 43233, 39483, 50214, 33517, 36257, 32933, 36305];
       const gemma3_27b = [44936, 42372, 37033, 43721, 46203, 41200, 46373, 52127, 41865, 43749, 38036, 44846, 43555, 44671, 40125, 28127, 36180, 39292, 46564, 51438, 38326, 59736, 38522, 38907, 35105, 38316];
       const llama3_3 = [55394, 40897, 43006, 50489, 53949, 48107, 58318, 62643, 51380, 50786, 43922, 50105, 48845, 44663, 44035, 27177, 41888, 43528, 57477, 56867, 44517, 65217, 43443, 42251, 40088, 42635];
       const tildeOpen = [37265, 37090, 36793, 36548, 37166, 36118, 37009, 37038, 37104, 37540, 37369, 37136, 36857, 37103, 40194, 31563, 42529, 40466, 47813, 44959, 44211, 51629, 42058, 39041, 41228, 39140];
@@ -95,17 +98,18 @@
       const teuken_7b = [36409, 31337, 33474, 30156, 30534, 31557, 30273, 31550, 32362, 35092, 55818, 41584, 31447, 64982, 31578, 29467, 34862, 50581, 32699, 55251, 45460, 41497, 46834, 35544, 32204, 30244];
       const mistral_nemo = [45750, 43035, 36321, 44610, 45939, 41749, 48147, 53218, 43847, 44775, 41858, 46498, 43403, 48182, 41456, 27832, 36701, 36800, 44830, 52412, 38803, 64410, 39294, 39359, 35516, 39126];
       const mistral_small_large = [59151, 57113, 48759, 56462, 61664, 54730, 60901, 67056, 58248, 55738, 57051, 59650, 54807, 59436, 50258, 31261, 48471, 49179, 61300, 63740, 49589, 69894, 49156, 48805, 47736, 47378];
+      const claude_sonnet_4_5 = [54152, 48253, 51986, 53108, 57337, 44866, 55947, 60652, 50691, 49015, 56394, 53132, 45830, 57721, 43781, 29901, 45981, 48021, 52301, 56892, 46437, 66557, 45195, 44156, 43216, 42423]
 
       // 2) Create the Plotly traces (one for each dataset)
-      const traceGPT4o = {
+      const traceGPT52 = {
         x: languages,
-        y: gpt4o,
-        name: 'gpt4o',
+        y: gpt52,
+        name: 'GPT-5.2',
         type: 'bar',
         marker: {
           color: '#142459' 
         },
-        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>gpt4o</extra>'
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>GPT-5.2</extra>'
       };
 
       const traceGemma = {
@@ -185,9 +189,22 @@
         },
         hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Mistral Small/Large</extra>'
       };
+      
+      
+      
+      const traceClaudeSonnet = {
+        x: languages,
+        y: claude_sonnet_4_5,
+        name: 'Claude Sonnet 4.5',
+        type: 'bar',
+        marker: {
+          color: '#1DBDE4' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Claude Sonnet 4.5</extra>'
+      };
 
       // 3) Combine all traces
-      const data = [traceGPT4o, traceGemma, traceLlama, traceEuro, traceTeuken, traceMistralNemo, traceMistralSmallLarge, traceTilde];
+      const data = [traceGPT52, traceGemma, traceLlama, traceEuro, traceTeuken, traceMistralNemo, traceMistralSmallLarge, traceClaudeSonnet, traceTilde];
 
       // 4) Define the layout with grouped bars and interactive features
       const layout = {
@@ -235,7 +252,7 @@
       // 5) Render the chart inside the chartDiv
       Plotly.newPlot('chartDiv', data, layout);
 
-      const gpt4oRatio      = [1.86, 1.93, 1.40, 2.02, 2.24, 1.79, 2.15, 2.21, 1.94, 1.63, 1.64, 2.00, 1.73, 2.05, 1.53, 1.08, 1.21, 1.22, 2.18, 1.90, 1.41, 2.12, 1.31, 1.51, 1.24, 1.58];
+      const gpt52Ratio      = [1.86, 1.93, 1.40, 2.02, 2.24, 1.79, 2.15, 2.21, 1.94, 1.63, 1.64, 2.00, 1.73, 2.05, 1.53, 1.08, 1.21, 1.22, 2.18, 1.90, 1.41, 2.12, 1.31, 1.51, 1.24, 1.58];
       const gemma3_27bRatio = [1.81, 1.91, 1.47, 2.20, 2.46, 1.85, 2.21, 2.36, 1.85, 1.62, 1.64, 1.98, 1.86, 1.94, 1.63, 1.13, 1.23, 1.31, 2.11, 2.26, 1.37, 2.53, 1.50, 1.62, 1.32, 1.66];
       const llama3_3Ratio   = [2.23, 1.84, 1.71, 2.54, 2.88, 2.16, 2.78, 2.83, 2.27, 1.89, 1.89, 2.22, 2.09, 1.94, 1.79, 1.09, 1.43, 1.45, 2.60, 2.50, 1.59, 2.76, 1.70, 1.76, 1.51, 1.85];
       const tildeOpenRatio    = [1.50, 1.67, 1.46, 1.84, 1.98, 1.63, 1.76, 1.68, 1.64, 1.39, 1.61, 1.64, 1.57, 1.61, 1.64, 1.27, 1.45, 1.34, 2.16, 1.98, 1.58, 2.18, 1.64, 1.63, 1.55, 1.70];
@@ -243,17 +260,18 @@
       const teuken_7bRatio = [1.47, 1.41, 1.33, 1.52, 1.63, 1.42, 1.44, 1.43, 1.43, 1.30, 2.40, 1.84, 1.34, 2.83, 1.28, 1.19, 1.19, 1.68, 1.48, 2.43, 1.63, 1.75, 1.83, 1.48, 1.21, 1.31];
       const mistral_nemoRatio = [1.84, 1.94, 1.44, 2.24, 2.45, 1.88, 2.30, 2.41, 1.93, 1.66, 1.80, 2.06, 1.85, 2.10, 1.69, 1.12, 1.25, 1.22, 2.03, 2.31, 1.39, 2.72, 1.54, 1.64, 1.34, 1.70];
       const mistral_small_largeRatio = [2.38, 2.57, 1.94, 2.84, 3.29, 2.46, 2.90, 3.03, 2.57, 2.07, 2.46, 2.64, 2.34, 2.59, 2.04, 1.26, 1.65, 1.63, 2.78, 2.80, 1.77, 2.96, 1.92, 2.04, 1.80, 2.06];
+      const claude_sonnetRatio = [2.18, 2.17, 2.06, 2.67, 3.06, 2.02, 2.67, 2.74, 2.24, 1.82, 2.43, 2.35, 1.96, 2.51, 1.78, 1.20, 1.57, 1.60, 2.37, 2.50, 1.66, 2.81, 1.77, 1.84, 1.63, 1.84];
       
       // 2) Create the Plotly traces (one for each dataset)
-      const traceGPT4oRatio = {
+      const traceGPT52Ratio = {
         x: languages,
-        y: gpt4oRatio,
-        name: 'gpt4o',
+        y: gpt52Ratio,
+        name: 'GPT-5.2',
         type: 'bar',
         marker: {
           color: '#142459' // Vibrant pinkish-red
         },
-        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>gpt4o</extra>'
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>GPT-5.2</extra>'
       };
 
       const traceGemmaRatio = {
@@ -333,9 +351,21 @@
         },
         hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Mistral Small/Large</extra>'
       };
+      
+      
+      const traceClaudeSonnetRatio = {
+        x: languages,
+        y: claude_sonnetRatio,
+        name: 'Claude Sonnet 4.5',
+        type: 'bar',
+        marker: {
+          color: '#1DBDE4' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Claude Sonnet 4.5</extra>'
+      };
 
       // 3) Combine all traces
-      const dataRatio = [traceGPT4oRatio, traceGemmaRatio, traceLlamaRatio, traceEuroRatio, traceTeukenRatio, traceMistralNemoRatio, traceMistralSmallLargeRatio, traceTildeRatio];
+      const dataRatio = [traceGPT52Ratio, traceGemmaRatio, traceLlamaRatio, traceEuroRatio, traceTeukenRatio, traceMistralNemoRatio, traceMistralSmallLargeRatio, traceClaudeSonnetRatio, traceTildeRatio];
 
       // 4) Define the layout with grouped bars and interactive features
       const layoutRatio = {
@@ -443,6 +473,7 @@
       const focus_teuken_7b = [36409, 31337, 30156, 30534, 31557, 30273, 31550, 32362, 55818, 41584, 31447, 64982];
       const focus_mistral_nemo = [45750, 43035, 44610, 45939, 41749, 48147, 53218, 43847, 41858, 46498, 43403, 48182];
       const focus_mistral_small_large = [59151, 57113, 56462, 61664, 54730, 60901, 67056, 58248, 57051, 59650, 54807, 59436];
+      const focus_claude_sonnet = [54152, 48253, 53108, 57337, 44866, 55947, 60652, 50691, 56394, 53132, 45830, 57721];
 
       // 2) Create the Plotly traces (one for each dataset)
       const focus_traceGPT4o = {
@@ -533,9 +564,21 @@
         },
         hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Mistral Small/Large</extra>'
       };
+      
+      
+      const focus_traceClaudeSonnet = {
+        x: focus_languages,
+        y: focus_claude_sonnet,
+        name: 'Claude Sonnet 4.5',
+        type: 'bar',
+        marker: {
+          color: '#1DBDE4' 
+        },
+        hovertemplate: 'Language: %{x}<br>Value: %{y}<extra>Claude Sonnet 4.5</extra>'
+      };
 
       // 3) Combine all traces
-      const focus_data = [focus_traceGPT4o, focus_traceGemma, focus_traceLlama, focus_traceEuro, focus_traceTeuken, focus_traceMistralNemo, focus_traceMistralSmallLarge, focus_traceTilde];
+      const focus_data = [focus_traceGPT4o, focus_traceGemma, focus_traceLlama, focus_traceEuro, focus_traceTeuken, focus_traceMistralNemo, focus_traceMistralSmallLarge, focus_traceClaudeSonnet, focus_traceTilde];
 
       // 4) Define the layout with grouped bars and interactive features
       const focus_layout = {
